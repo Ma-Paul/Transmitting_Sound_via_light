@@ -1,7 +1,3 @@
-
-
-
-
 import numpy as np
 import scipy.io.wavfile as wav
 import sounddevice as sd
@@ -9,15 +5,21 @@ import time
 import serial
 from get_lowest_note import get_lowest_note_fn
 from get_highest_note import get_highest_note_fn
-high = get_highest_note_fn(r"C:\Users\mantz\OneDrive\Desktop\SFZ Projekte\Transmitting_Sound_via_light\translator\Coldplay - Viva La Vida (Official Video).wav")
-low = get_lowest_note_fn(r"C:\Users\mantz\OneDrive\Desktop\SFZ Projekte\Transmitting_Sound_via_light\translator\Coldplay - Viva La Vida (Official Video).wav")
+
+adress = False
+adress = str(input())
+high = get_highest_note_fn(rf"{adress}")
+low = get_lowest_note_fn(rf"{adress}")
 print(f"High: {high}, Low: {low}")
-arduino = serial.Serial(port='COM4', baudrate=115200, timeout=.1)
-def write_read(x): 
-    arduino.write(bytes(x, 'utf-8')) 
-    time.sleep(0.05) 
-    data = arduino.readline() 
-    return data 
+arduino = serial.Serial(port="COM4", baudrate=115200, timeout=0.1)
+
+
+def write_read(x):
+    arduino.write(bytes(x, "utf-8"))
+    time.sleep(0.05)
+    data = arduino.readline()
+    return data
+
 
 def get_current_frequency(filename):
     sample_rate, data = wav.read(filename)
@@ -26,14 +28,14 @@ def get_current_frequency(filename):
         data = data[:, 0]
     data = data.astype(np.float32)
 
-    WINDOW_SIZE = 2048        # How many samples per analysis chunk
-    THRESHOLD = 0.01          # Noise threshold (tune if needed)
+    WINDOW_SIZE = 2048  # How many samples per analysis chunk
+    THRESHOLD = 0.01  # Noise threshold (tune if needed)
 
-    current_frequency = 0.0   # <-- this is your variable
+    current_frequency = 0.0  # <-- this is your variable
 
     def get_dominant_frequency(chunk):
         fft_result = np.abs(np.fft.rfft(chunk))
-        frequencies = np.fft.rfftfreq(len(chunk), d=1/sample_rate)
+        frequencies = np.fft.rfftfreq(len(chunk), d=1 / sample_rate)
         threshold = np.max(fft_result) * THRESHOLD
         significant = frequencies[fft_result > threshold]
         if len(significant) == 0:
@@ -56,17 +58,18 @@ def get_current_frequency(filename):
 
     sd.wait()
     return current_frequency
-atm = get_current_frequency(r"C:\Users\mantz\OneDrive\Desktop\SFZ Projekte\Transmitting_Sound_via_light\translator\Coldplay - Viva La Vida (Official Video).wav")
+
+
+atm = get_current_frequency(
+    r"C:\Users\mantz\OneDrive\Desktop\SFZ Projekte\Transmitting_Sound_via_light\translator\Coldplay - Viva La Vida (Official Video).wav"
+)
 if atm == low:
-	percent = 0
-else: 
-	percent = atm / high
+    percent = 0
+else:
+    percent = atm / high
 
 
-
-
-while True: 
-	num = percent
-	value = write_read(num) 
-	print(value) # printing the value 
-
+while True:
+    num = percent
+    value = write_read(num)
+    print(value)  # printing the value
